@@ -96,6 +96,7 @@ def send_tts_file(
     story_id: int,
     title: str,
     mp3_path: str,
+    voice: str = "onyx",
 ) -> bool:
     """
     Upload an MP3 file to Discord via the webhook.
@@ -106,7 +107,7 @@ def send_tts_file(
         logger.error("MP3 file not found: %s", mp3_path)
         return False
 
-    message = f"🎙️ Audio généré pour l'histoire **#{story_id}** — {title[:150]}"
+    message = f"🎙️ Audio généré pour l'histoire **#{story_id}** — {title[:150]}\n🗣️ Voix : **{voice}**"
 
     try:
         with open(path, "rb") as f:

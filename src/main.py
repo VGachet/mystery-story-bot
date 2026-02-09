@@ -15,6 +15,7 @@ from .db import init_db, insert_story
 from .scraper import scrape_subreddit
 from .generator import generate_script
 from .discord_notify import send_story_card
+from .tts import generate_tts_for_story
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -139,6 +140,19 @@ def run() -> None:
                 score=post["score"],
                 subreddit=post["subreddit"],
             )
+
+            # Generate TTS audio (random voice among onyx/echo/fable)
+            try:
+                generate_tts_for_story(
+                    settings=settings,
+                    story_id=story_id,
+                    title=post["title"],
+                    script=script,
+                )
+            except Exception as tts_exc:
+                logger.error(
+                    "TTS failed for story #%d: %s", story_id, tts_exc,
+                )
 
             processed += 1
 
