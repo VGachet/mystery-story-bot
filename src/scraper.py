@@ -15,10 +15,10 @@ from .db import story_exists
 
 logger = logging.getLogger(__name__)
 
-# Reddit JSON sort/time combinations to rotate through for variety
+# Reddit JSON sort/time combinations — 2 feeds is the sweet spot
+# (top/week catches trending stories, hot catches fresh ones)
 _FEEDS = [
     ("top", "week"),
-    ("top", "month"),
     ("hot", None),
 ]
 
@@ -66,9 +66,16 @@ def _fetch_via_brightdata(
             )
             resp.raise_for_status()
 
-            # The response body is the raw Reddit JSON page
-            data = resp.json()
-            return data
+            # Bright Data sometimes returns an empty body (200 OK but no content)
+            body = resp.text.strip()
+            if not body:
+                logger.warning(
+                    "Bright Data returned empty body on attempt %d (status=%d)",
+                    attempt, resp.status_code,
+                )
+            else:
+                data = json.loads(body)
+                return data
 
         except requests.exceptions.HTTPError as exc:
             status = exc.response.status_code if exc.response is not None else "?"
@@ -80,9 +87,11 @@ def _fetch_via_brightdata(
                 "Bright Data request error on attempt %d: %s", attempt, exc
             )
         except json.JSONDecodeError as exc:
+            # Log a snippet of the response body for debugging
+            snippet = resp.text[:200] if resp else "(no response)"
             logger.warning(
-                "Failed to parse Bright Data response as JSON on attempt %d: %s",
-                attempt, exc,
+                "Failed to parse Bright Data response as JSON on attempt %d: %s — body: %s",
+                attempt, exc, snippet,
             )
 
         if attempt < max_retries:

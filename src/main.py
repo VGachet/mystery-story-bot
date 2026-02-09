@@ -49,9 +49,16 @@ def run() -> None:
     _validate_settings(settings)
 
     logger.info("=== mystery-story-bot starting ===")
+    # Pick a random subset of subreddits for this run (rotation)
+    all_subs = list(settings.subreddits)
+    random.shuffle(all_subs)
+    active_subs = all_subs[: settings.subs_per_run]
+
     logger.info(
-        "Config: subreddits=%s, score=%d–%d, max_per_run=%d",
-        settings.subreddits,
+        "Config: subs_this_run=%s (%d/%d), score=%d–%d, max_per_run=%d",
+        active_subs,
+        len(active_subs),
+        len(settings.subreddits),
         settings.min_score,
         settings.max_score,
         settings.max_stories_per_run,
@@ -60,10 +67,10 @@ def run() -> None:
     # 1. Init database
     init_db(settings.db_path)
 
-    # 2. Scrape all subreddits
+    # 2. Scrape selected subreddits
     posts_by_sub: defaultdict[str, List[Dict]] = defaultdict(list)
     total_candidates = 0
-    for sub in settings.subreddits:
+    for sub in active_subs:
         try:
             posts = scrape_subreddit(settings, sub)
             random.shuffle(posts)  # randomize within each sub
@@ -144,7 +151,7 @@ def run() -> None:
 
     logger.info(
         "=== Done: %d processed, %d errors, %d total candidates ===",
-        processed, errors, len(all_candidates),
+        processed, errors, total_candidates,
     )
 
 
