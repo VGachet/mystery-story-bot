@@ -1,0 +1,13 @@
+services:
+  mystery-bot:
+    build: .
+    container_name: mystery-story-bot
+    env_file: .env
+    volumes:
+      # Persist SQLite database across runs
+      - ./data:/app/data
+      # Persist generated MP3 files
+      - ./output:/app/output
+    restart: "no"
+    # Default command: run the scraping + generation pipeline
+    command: python -m src.main
