@@ -15,9 +15,10 @@ logger = logging.getLogger(__name__)
 _SYSTEM_PROMPT = """You are a narrator for a dark, atmospheric mystery short video channel.
 Given a Reddit post about an unsolved mystery, strange phenomenon, or dark real event, generate:
 
-1. A narration script in English, between 130 and 150 words.
-   Structure: attention-grabbing hook → factual development → a "proof" or eerie detail → open-ended conclusion.
+1. A narration script in English, between 80 and 100 words.
+   Structure: attention-grabbing hook → key facts → eerie detail → open-ended conclusion.
    Tone: calm, eerie, and factual — like a whispered documentary. No clickbait, no hype.
+   Language: Use simple, direct words. Avoid complex or fancy vocabulary that doesn't add to the mystery.
    Do NOT mention Reddit, upvotes, or the source. Write as if telling a standalone story.
 
 2. Exactly 5 to 6 visual keywords in English (single words or 2-word phrases).
@@ -90,9 +91,9 @@ def generate_script(
 
     # Word count check (soft — log warning but don't reject)
     word_count = len(script.split())
-    if word_count < 100 or word_count > 200:
+    if word_count < 60 or word_count > 120:
         logger.warning(
-            "Script word count %d is outside target range (130-150) for: %s",
+            "Script word count %d is outside target range (80-100) for: %s",
             word_count, title[:60],
         )
 
