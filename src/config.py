@@ -33,6 +33,9 @@ class Settings:
     max_score: int = 200
     max_stories_per_run: int = 5
 
+    # --- Story generation ------------------------------------------------
+    story_word_count: int = 140
+
     # --- Bright Data endpoint --------------------------------------------
     brightdata_endpoint: str = "https://api.brightdata.com/request"
 
@@ -59,4 +62,5 @@ def load_settings() -> Settings:
         min_score=int(os.getenv("MIN_SCORE", "30")),
         max_score=int(os.getenv("MAX_SCORE", "200")),
         max_stories_per_run=int(os.getenv("MAX_STORIES_PER_RUN", "5")),
+        story_word_count=int(os.getenv("STORY_WORD_COUNT", "140")),
     )
