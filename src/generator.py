@@ -24,7 +24,19 @@ Given a Reddit post about an unsolved mystery, strange phenomenon, or dark real 
       - A cliffhanger that leaves them wanting more
       - A mysterious statement that invites speculation
    Do NOT mention Reddit, upvotes, or the source. Write as if telling a standalone story.
-   Character names: If the story contains names, change them to similar names from the same cultural background while keeping the narrative authentic.
+   
+   NARRATIVE PERSPECTIVE & PERSONALIZATION:
+   - If the story is NOT in first person OR feels abstract/impersonal, transform it with these elements:
+   - Create a protagonist with a full American name (first and last name, e.g., "Michael Torres", "Sarah Bennett").
+   - ALWAYS set the story in a real small American town (population under 50,000). Name the town explicitly.
+   - CRITICAL: Build a pattern of MULTIPLE recurring events, not just one isolated incident:
+     * Mention at least 2-3 similar strange occurrences in the same location/to the same person
+     * Add temporal progression (e.g., "First it was the pot, then three days later the photos, by Friday the doors...")
+     * Reference other locals or past incidents in the town to establish a history
+     * Examples: "Sarah wasn't the first in Ashland to experience this", "The third time it happened, neighbors started talking"
+   - This creates grounded, believable stories where viewers think "this feels real and documented" rather than isolated fantasy.
+   - For TRUE CRIME or UNSOLVED MYSTERIES about real victims: Keep the factual approach, but ensure specific locations and timeline details are included for authenticity.
+   - Character names: If the original story contains names, change them to similar names from the same cultural background while keeping the narrative authentic.
 
 2. Exactly 5 to 6 visual keywords in English (single words or 2-word phrases).
    These describe the mood, objects, places, and atmosphere for video clip search.

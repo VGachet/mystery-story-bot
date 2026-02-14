@@ -29,8 +29,8 @@ class Settings:
     # --- Scraping --------------------------------------------------------
     subreddits: List[str] = field(default_factory=list)
     subs_per_run: int = 4
-    min_score: int = 30
-    max_score: int = 200
+    min_score: int = 300
+    max_score: int = 10000
     max_stories_per_run: int = 5
 
     # --- Story generation ------------------------------------------------
@@ -59,8 +59,8 @@ def load_settings() -> Settings:
         output_dir=os.getenv("OUTPUT_DIR", "output"),
         subreddits=subreddits,
         subs_per_run=int(os.getenv("SUBS_PER_RUN", "4")),
-        min_score=int(os.getenv("MIN_SCORE", "30")),
-        max_score=int(os.getenv("MAX_SCORE", "200")),
+        min_score=int(os.getenv("MIN_SCORE", "300")),
+        max_score=int(os.getenv("MAX_SCORE", "10000")),
         max_stories_per_run=int(os.getenv("MAX_STORIES_PER_RUN", "5")),
         story_word_count=int(os.getenv("STORY_WORD_COUNT", "140")),
     )
