@@ -35,9 +35,10 @@ def generate_tts_for_story(
     title: str,
     script: str,
     voice: str | None = None,
+    part: int | None = None,
 ) -> str | None:
     """
-    Generate TTS for a story and send to Discord.
+    Generate TTS for a story (or a single part of a multi-part story).
     Can be called directly from the pipeline (no DB lookup needed).
     Returns the MP3 path on success, None on failure.
     """
@@ -45,12 +46,17 @@ def generate_tts_for_story(
         voice = random.choice(MYSTERY_VOICES)
         logger.info("Randomly selected voice: %s", voice)
 
-    logger.info("Generating TTS for story #%d (voice=%s): %s", story_id, voice, title[:60])
+    part_label = f" (part {part})" if part else ""
+    logger.info("Generating TTS for story #%d%s (voice=%s): %s", story_id, part_label, voice, title[:60])
 
     client = OpenAI(api_key=settings.openai_api_key)
     output_dir = Path(settings.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    mp3_path = output_dir / f"story_{story_id}.mp3"
+
+    if part:
+        mp3_path = output_dir / f"story_{story_id}_part{part}.mp3"
+    else:
+        mp3_path = output_dir / f"story_{story_id}.mp3"
 
     with client.audio.speech.with_streaming_response.create(
         model="tts-1",

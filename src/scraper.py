@@ -1,5 +1,6 @@
 """
-Reddit scraper — fetches posts via Bright Data Web Unlocker.
+Reddit scraper — fetches subreddit feeds via Reddit public JSON API,
+uses Bright Data for individual post pages when needed.
 """
 
 import json
@@ -22,6 +23,8 @@ _FEEDS = [
     ("hot", None),
 ]
 
+_USER_AGENT = "mystery-story-bot/1.0 (educational project)"
+
 
 def _build_reddit_url(subreddit: str, sort: str, time_filter: str | None, limit: int = 50) -> str:
     """Build a Reddit .json URL for the given subreddit and sort parameters."""
@@ -33,44 +36,33 @@ def _build_reddit_url(subreddit: str, sort: str, time_filter: str | None, limit:
     return url
 
 
-def _fetch_via_brightdata(
-    settings: Settings,
+def _fetch_reddit_json(
     target_url: str,
     max_retries: int = 3,
 ) -> dict | None:
     """
-    Send a request through Bright Data Web Unlocker and return parsed JSON.
+    Fetch a Reddit JSON feed directly (public API).
     Retries with exponential backoff on failure.
     """
-    headers = {
-        "Authorization": f"Bearer {settings.brightdata_api_key}",
-        "Content-Type": "application/json",
-    }
-    payload = {
-        "zone": settings.brightdata_zone,
-        "url": target_url,
-        "format": "raw",
-    }
+    headers = {"User-Agent": _USER_AGENT}
 
     for attempt in range(1, max_retries + 1):
         try:
             logger.info(
-                "Bright Data request (attempt %d/%d): %s",
+                "Reddit request (attempt %d/%d): %s",
                 attempt, max_retries, target_url,
             )
-            resp = requests.post(
-                settings.brightdata_endpoint,
+            resp = requests.get(
+                target_url,
                 headers=headers,
-                json=payload,
-                timeout=60,
+                timeout=30,
             )
             resp.raise_for_status()
 
-            # Bright Data sometimes returns an empty body (200 OK but no content)
             body = resp.text.strip()
             if not body:
                 logger.warning(
-                    "Bright Data returned empty body on attempt %d (status=%d)",
+                    "Reddit returned empty body on attempt %d (status=%d)",
                     attempt, resp.status_code,
                 )
             else:
@@ -80,26 +72,31 @@ def _fetch_via_brightdata(
         except requests.exceptions.HTTPError as exc:
             status = exc.response.status_code if exc.response is not None else "?"
             logger.warning(
-                "Bright Data HTTP %s on attempt %d: %s", status, attempt, exc
+                "Reddit HTTP %s on attempt %d: %s", status, attempt, exc
             )
+            # 429 = rate limited — wait longer
+            if status == 429 and attempt < max_retries:
+                wait = 5 * attempt
+                logger.info("Rate limited, waiting %ds…", wait)
+                time.sleep(wait)
+                continue
         except requests.exceptions.RequestException as exc:
             logger.warning(
-                "Bright Data request error on attempt %d: %s", attempt, exc
+                "Reddit request error on attempt %d: %s", attempt, exc
             )
         except json.JSONDecodeError as exc:
-            # Log a snippet of the response body for debugging
             snippet = resp.text[:200] if resp else "(no response)"
             logger.warning(
-                "Failed to parse Bright Data response as JSON on attempt %d: %s — body: %s",
+                "Failed to parse Reddit response as JSON on attempt %d: %s — body: %s",
                 attempt, exc, snippet,
             )
 
         if attempt < max_retries:
-            wait = 2 ** attempt  # 2s, 4s, 8s
+            wait = 2 ** attempt
             logger.info("Retrying in %ds…", wait)
             time.sleep(wait)
 
-    logger.error("All %d Bright Data attempts failed for %s", max_retries, target_url)
+    logger.error("All %d Reddit attempts failed for %s", max_retries, target_url)
     return None
 
 
@@ -149,7 +146,7 @@ def scrape_subreddit(
 
     for sort, time_filter in _FEEDS:
         target_url = _build_reddit_url(subreddit, sort, time_filter)
-        raw = _fetch_via_brightdata(settings, target_url)
+        raw = _fetch_reddit_json(target_url)
         if raw is None:
             continue
 

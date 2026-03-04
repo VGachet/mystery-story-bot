@@ -113,42 +113,71 @@ def run() -> None:
     processed = 0
     errors = 0
 
-    for post in candidates:
+    for idx, post in enumerate(candidates):
         try:
+            # Alternate: every other story is multi-part (3 episodes)
+            multi_part = (idx % 2 == 1)
+
             # Generate script via GPT-4o
-            script, keywords = generate_script(
-                settings, post["title"], post["selftext"]
+            script_parts, keywords = generate_script(
+                settings, post["title"], post["selftext"],
+                multi_part=multi_part,
             )
+
+            # For DB storage, join parts with separator or store single script
+            script_for_db = "\n\n---PART---\n\n".join(script_parts)
 
             # Store in database
             story_data = {
                 **post,
-                "script": script,
+                "script": script_for_db,
                 "keywords": keywords,
             }
             story_id = insert_story(settings.db_path, story_data)
-            logger.info("Story #%d saved: %s", story_id, post["title"][:60])
+            logger.info("Story #%d saved (%s): %s",
+                        story_id,
+                        f"{len(script_parts)}-part" if multi_part else "single",
+                        post["title"][:60])
 
-            # Notify on Discord
-            send_story_card(
-                settings=settings,
-                story_id=story_id,
-                title=post["title"],
-                url=post["url"],
-                script=script,
-                keywords=keywords,
-                score=post["score"],
-                subreddit=post["subreddit"],
-            )
-
-            # Generate TTS audio (random voice among onyx/echo/fable)
-            try:
-                generate_tts_for_story(
+            # Notify on Discord — one card per part for multi-part stories
+            if multi_part:
+                for part_idx, part_script in enumerate(script_parts):
+                    send_story_card(
+                        settings=settings,
+                        story_id=story_id,
+                        title=f"{post['title']} (Part {part_idx + 1}/{len(script_parts)})",
+                        url=post["url"],
+                        script=part_script,
+                        keywords=keywords,
+                        score=post["score"],
+                        subreddit=post["subreddit"],
+                    )
+            else:
+                send_story_card(
                     settings=settings,
                     story_id=story_id,
                     title=post["title"],
-                    script=script,
+                    url=post["url"],
+                    script=script_for_db,
+                    keywords=keywords,
+                    score=post["score"],
+                    subreddit=post["subreddit"],
                 )
+
+            # Generate TTS audio — one file per part, same voice throughout
+            try:
+                # Pick voice once for all parts
+                voice = random.choice(["onyx", "echo", "fable"])
+                for part_idx, part_script in enumerate(script_parts):
+                    part_num = (part_idx + 1) if multi_part else None
+                    generate_tts_for_story(
+                        settings=settings,
+                        story_id=story_id,
+                        title=post["title"],
+                        script=part_script,
+                        voice=voice,
+                        part=part_num,
+                    )
             except Exception as tts_exc:
                 logger.error(
                     "TTS failed for story #%d: %s", story_id, tts_exc,
